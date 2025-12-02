@@ -39,7 +39,7 @@ async function fetchLeads() {
         while (allLeads.length < TARGET_LEADS) {
             console.log(`Fetching Page ${page}... (Current Count: ${allLeads.length})`);
             
-            const response = await axios.post('https://api.apollo.io/v1/accounts/search', {
+            const response = await axios.post('https://api.apollo.io/v1/mixed_people/search', {
                 page: page,
                 per_page: 50,
                 person_titles: ["CEO", "Chief Executive Officer", "COO", "Chief Operating Officer", "CFO", "Chief Financial Officer"],
