@@ -3,8 +3,7 @@ const axios = require('axios');
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 
 // CONFIGURATION
-// Ideally, put API_KEY in a .env file: APOLLO_API_KEY=your_key_here
-const API_KEY = process.env.APOLLO_API_KEY; 
+const API_KEY = process.env.APOLLO_API_KEY || 'YOUR_APOLLO_API_KEY_HERE'; 
 const TARGET_LEADS = 100;
 
 // CSV Writer Setup with EXACT columns requested
@@ -34,23 +33,24 @@ async function fetchLeads() {
     let page = 1;
     let uniqueEmails = new Set(); // To ensure no duplicates
 
-    console.log("🚀 Starting Mini-Pipeline...");
+    console.log("Starting Mini-Pipeline...");
 
     try {
         while (allLeads.length < TARGET_LEADS) {
             console.log(`Fetching Page ${page}... (Current Count: ${allLeads.length})`);
-
-            const response = await axios.post('https://api.apollo.io/v1/mixed_people/search', {
-                api_key: API_KEY,
+            
+            const response = await axios.post('https://api.apollo.io/v1/contacts/search', {
                 page: page,
-                per_page: 50, // Fetch in batches
+                per_page: 50,
                 person_titles: ["CEO", "Chief Executive Officer", "COO", "Chief Operating Officer", "CFO", "Chief Financial Officer"],
                 organization_num_employees_ranges: ["200,500", "500,1000"],
                 person_locations: ["United States", "Canada"],
-                // "civil engineering", "construction", "architecture", "design"
-                q_organization_keyword_tags: ["construction", "architecture & planning", "civil engineering", "commercial real estate"], 
+                q_organization_keyword_tags: ["construction", "architecture & planning", "civil engineering", "commercial real estate", "design"]
             }, {
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-Api-Key': API_KEY
+                }
             });
 
             const people = response.data.people;
@@ -60,7 +60,7 @@ async function fetchLeads() {
                 break;
             }
 
-            // PROCESS & CLEAN DATA PARALLEL-ISH (Map function)
+            // PROCESS & CLEAN DATA
             const processedBatch = people.map(p => {
                 const email = p.email || "N/A";
                 
@@ -80,10 +80,10 @@ async function fetchLeads() {
                     linkedinContact: p.linkedin_url || "N/A",
                     linkedinCompany: p.organization?.linkedin_url || "N/A",
                     source: "Apollo API",
-                    emailStatus: p.email_status || "unknown", // mapped to valid/invalid/accept_all
-                    lastVerified: new Date().toISOString().split('T')[0] // Today's date
+                    emailStatus: p.email_status || "unknown", 
+                    lastVerified: new Date().toISOString().split('T')[0]
                 };
-            }).filter(item => item !== null); // Remove nulls (duplicates/no email)
+            }).filter(item => item !== null); 
 
             allLeads = [...allLeads, ...processedBatch];
             page++;
@@ -100,7 +100,8 @@ async function fetchLeads() {
         console.log(`Success! ${finalLeads.length} leads saved to Leads_Sheet.csv`);
 
     } catch (error) {
-        console.error("Error:", error.response ? error.response.data : error.message);
+        // Enhanced error logging to see details if it fails again
+        console.error("Error:", error.response ? JSON.stringify(error.response.data, null, 2) : error.message);
     }
 }
 
