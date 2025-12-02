@@ -38,7 +38,7 @@ async function fetchLeads() {
 
     try {
         while (allLeads.length < TARGET_LEADS) {
-            console.log(`🔍 Fetching Page ${page}... (Current Count: ${allLeads.length})`);
+            console.log(`Fetching Page ${page}... (Current Count: ${allLeads.length})`);
 
             const response = await axios.post('https://api.apollo.io/v1/mixed_people/search', {
                 api_key: API_KEY,
@@ -56,7 +56,7 @@ async function fetchLeads() {
             const people = response.data.people;
             
             if (!people || people.length === 0) {
-                console.log("⚠️ No more data found.");
+                console.log("No more data found.");
                 break;
             }
 
@@ -97,10 +97,10 @@ async function fetchLeads() {
 
         // WRITE TO CSV
         await csvWriter.writeRecords(finalLeads);
-        console.log(`✅ Success! ${finalLeads.length} leads saved to Leads_Sheet.csv`);
+        console.log(`Success! ${finalLeads.length} leads saved to Leads_Sheet.csv`);
 
     } catch (error) {
-        console.error("❌ Error:", error.response ? error.response.data : error.message);
+        console.error("Error:", error.response ? error.response.data : error.message);
     }
 }
 
